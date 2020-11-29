@@ -30,7 +30,7 @@ def processTweet(tweet):
 
 	# (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
         
-        print("\n\n=========================\ntweet: ", text)
+        print("\n\n=========================\ntweet: ", text, "\t location: ", rawLocation)
 
 
         # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
