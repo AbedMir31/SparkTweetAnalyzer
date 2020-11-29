@@ -12,16 +12,12 @@ access_secret="Qf8gf7dLvUrKqAssPmxqbJJ8XvlRG054oLmbJnBBBRMp8"
 
 consumer_key="jh9Tl3HwDRGk3or5AJYdCNVMV"
 consumer_secret="g8OTo6hQOXoXdhWi3eb4zRhEkfMaee765vcLIPSFjbr7sZENF4"
-
-
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
-
-hashtag = '#Trump'
-
 TCP_IP = 'localhost'
 TCP_PORT = 9001
+
 def rehelper(text):
     #cleaning the pattern
     cleaned = re.compile(pattern = "["
@@ -31,7 +27,6 @@ def rehelper(text):
                                     "]+", flags=re.UNICODE)
     return cleaned.sub(r'',text)
 
-
 def preprocessing(tweet):
     
     # Add here your code to preprocess the tweets and  
@@ -39,11 +34,8 @@ def preprocessing(tweet):
     #here using either re or preprocessor
     p.clean(tweet)
     hold = rehelper(tweet)
-    tweet = hold
+    tweet = hold.replace('#', '')
     return tweet
-
-
-
 
 def getTweet(status):
     
@@ -94,7 +86,10 @@ class MyStreamListener(tweepy.StreamListener):
         else:
             print(status_code)
 if __name__ == "__main__":
-# create sockets
+    
+    hashtag = '#Minecraft'
+
+    # create sockets
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((TCP_IP, TCP_PORT))
     s.listen(1)
@@ -102,5 +97,3 @@ if __name__ == "__main__":
 
     myStream = tweepy.Stream(auth=auth, listener=MyStreamListener())
     myStream.filter(track=[hashtag], languages=["en"], is_async=True)
-
-
