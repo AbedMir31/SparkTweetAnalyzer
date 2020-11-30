@@ -17,8 +17,6 @@ def processTweet(tweet):
     # (ii) Get data corresponding to place where the tweet was generate (using geopy or googlemaps)
     # (iii) Index the data using Elastic Search         
 
-    es = Elasticsearch()
-    es.indices.create(index='twitter', ignore=400)
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
@@ -39,14 +37,7 @@ def processTweet(tweet):
         print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
      # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
-        data = {
-            "tweet": {
-                "text":text,
-                "location":rawLocation,
-                "sentiment":sentiment
-            }
-        }
-        res = es.index(index='tw', doc_type='tweets', body=json.loads(data))
+
 
 if __name__ == "__main__":
     # Pyspark
