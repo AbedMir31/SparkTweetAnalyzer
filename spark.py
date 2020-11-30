@@ -9,7 +9,6 @@ from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
-
 def processTweet(tweet):
 
     # Here, you should implement:
@@ -37,6 +36,14 @@ def processTweet(tweet):
         print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
      # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
+        with open("logger.json", "a") as data:
+            pack_tweet = {
+                "text":text,
+                "location":rawLocation,
+                "sentiment":sentiment
+            }
+            data.write(json.dumps(pack_tweet, indent=4, separators=(',', ':')))
+            data.close()
 
 
 if __name__ == "__main__":
