@@ -1,59 +1,52 @@
 import tweepy
 import socket
 import re #Here to preprocess the tweet for emoji removal
-import preprocessor as p 
+#import preprocessor as p
 import sys
 import googlemaps
-import pandas as pd 
-
+import pandas as pd
+import json
+from textblob import TextBlob
 
 access_token="1326362589002149888-L1HZIK8K5vYHRPfOktglTmhlSk5KsK"
 access_secret="Qf8gf7dLvUrKqAssPmxqbJJ8XvlRG054oLmbJnBBBRMp8"
 
 consumer_key="jh9Tl3HwDRGk3or5AJYdCNVMV"
 consumer_secret="g8OTo6hQOXoXdhWi3eb4zRhEkfMaee765vcLIPSFjbr7sZENF4"
-
-
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 
-
-hashtag = '#Trump'
-
 TCP_IP = 'localhost'
 TCP_PORT = 9001
+
 def rehelper(text):
     #cleaning the pattern
     cleaned = re.compile(pattern = "["
         u"\U0001F300-\U0001F5FF"
-        u"\U0001F680-\U0001F6FF" 
+        u"\U0001F680-\U0001F6FF"
         u"\U0001F1E0-\U0001F1FF"
+        u"\U0001F600-\U0001F64F"
                                     "]+", flags=re.UNICODE)
     return cleaned.sub(r'',text)
 
-
 def preprocessing(tweet):
-    
-    # Add here your code to preprocess the tweets and  
+
+    # Add here your code to preprocess the tweets and
     # remove Emoji patterns, emoticons, symbols & pictographs, transport & map symbols, flags (iOS), etc
     #here using either re or preprocessor
-    p.clean(tweet)
     hold = rehelper(tweet)
-    tweet = hold
-    return tweet
-
-
-
+    return hold
 
 def getTweet(status):
-    
-    # You can explore fields/data other than location and the tweet itself. 
+
+    # You can explore fields/data other than location and the tweet itself.
     # Check what else you could explore in terms of data inside Status object
 
     tweet = ""
     location = ""
     location = status.user.location
-    
+    #user = status.user
+
     if hasattr(status, "retweeted_status"):  # Check if Retweet
         try:
             tweet = status.retweeted_status.extended_tweet["full_text"]
@@ -70,6 +63,9 @@ def getTweet(status):
 
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
+        data = json.loads(status)
+        tweet = TextBlob(data["text"])
+
         googleholder=googlemaps.Client(key ="AIzaSyCJdLk_x5tkFvAHNAeOB5-VGTP1MCEMiL0")
         location, tweet = getTweet(status)
         if location != None:
@@ -81,10 +77,11 @@ class MyStreamListener(tweepy.StreamListener):
                 local_latlong=""
         else:
             local_latlong=""
+
         if (location != None and tweet != None):
-            tweetLocation = location + "::" + tweet+"\n"
+            tweetLocation = local_latlong + "::" + tweet+"\n"
             print(status.text)
-            conn.send(tweetLocation.encode('utf-8'))
+            conn.send(tweetLocation.encode('ascii', 'ignore'))
         return True
 
 
@@ -94,13 +91,14 @@ class MyStreamListener(tweepy.StreamListener):
         else:
             print(status_code)
 if __name__ == "__main__":
-# create sockets
+
+    hashtag = '#Nike'
+
+    # create sockets
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((TCP_IP, TCP_PORT))
     s.listen(1)
     conn, addr = s.accept()
 
     myStream = tweepy.Stream(auth=auth, listener=MyStreamListener())
-    myStream.filter(track=[hashtag], languages=["en"], is_async=True)
-
-
+    myStream.filter(track=[hashtag], languages=["en"])

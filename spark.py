@@ -1,62 +1,86 @@
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
 import googlemaps
-# from textblob import TextBlob
-# from elasticsearch import Elasticsearch
-
-
+import re, string
+import random
+import json
+from textblob import TextBlob
+from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
-
-
-
+ES_IND ="tweets"
+es =Elasticsearch([{'host':'localhost', 'port':9200}])
 
 def processTweet(tweet):
-
     # Here, you should implement:
     # (i) Sentiment analysis,
     # (ii) Get data corresponding to place where the tweet was generate (using geopy or googlemaps)
-    # (iii) Index the data using Elastic Search         
-
+    # (iii) Index the data using Elastic Search
+    #es.indices.create(index=ES_IND,ignore=400)
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
         rawLocation = tweetData[0]
+        rawLocation =tweetData.split()
         text = tweetData[1]
-        
 
         # (i) Apply Sentiment analysis in "text"
+        blob = TextBlob(text)
+        if blob.sentiment.polarity < 0:
+            sentiment = "Negative"
+        elif blob.sentiment.polarity == 0:
+            sentiment = "Neutral"
+        else:
+            sentiment = "Positive"
 
-	# (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
-        
-        print("\n\n=========================\ntweet: ", text)
+	 # (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
 
+        print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
-        # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
-        
+     # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!)
+        with open("logger.json", "a") as data:
+            pack_tweet = {
+                "text":text,
+                "location":rawLocation,
+                "sentiment":sentiment
+            }
+            data.write(json.dumps(pack_tweet, indent=4, separators=(',', ':')))
+            data.close()
+            
+            #Here i try and success in starting elasticsearch that connects to Kibana
+            #Here we connect to the elasticsearch server
+            #with open("/home/mrcig/Dev/project/SparkTweetAnalyzer-main/logger.json") as json_file:
+                #js_doc =json.load(json_file)
+            #res= es.index()
+            #es.index(index ="sent", doc_type="example"
+                   # body={"user": })
+        es.index(index="sentiment",
+                doc_type="test-type", 
+                body={"text":text,
+                "location":rawLocation,
+                "sentiment":sentiment})
+       
+    
 
+if __name__ == "__main__":
+    # Pyspark
+    # create spark configuration
+    conf = SparkConf()
+    conf.setAppName('twitterApp')
+    conf.setMaster('local[2]')
 
+    # create spark context with the above configuration
+    sc = SparkContext(conf=conf)
+    sc.setLogLevel("FATAL")
 
-# Pyspark
-# create spark configuration
-conf = SparkConf()
-conf.setAppName('twitterApp')
-conf.setMaster('local[2]')
+    # create the Streaming Context from spark context with interval size 4 seconds
+    ssc = StreamingContext(sc, 4)
+    ssc.checkpoint("checkpoint_TwitterApp")
 
-# create spark context with the above configuration
-sc = SparkContext(conf=conf)
+    # read data from port 900
+    dataStream = ssc.socketTextStream(TCP_IP, TCP_PORT)
+    dataStream.foreachRDD(lambda rdd: rdd.foreach(processTweet))
 
-# create the Streaming Context from spark context with interval size 4 seconds
-ssc = StreamingContext(sc, 4)
-ssc.checkpoint("checkpoint_TwitterApp")
-
-# read data from port 900
-dataStream = ssc.socketTextStream(TCP_IP, TCP_PORT)
-
-
-dataStream.foreachRDD(lambda rdd: rdd.foreach(processTweet))
-
-
-ssc.start()
-ssc.awaitTermination()
+    ssc.start()
+    ssc.awaitTermination()
