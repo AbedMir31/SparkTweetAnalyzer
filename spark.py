@@ -9,7 +9,7 @@ from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
-def processTweet(tweet):
+def processTweet(ssc, tweet):
     es = Elasticsearch([{'host': 'localhost', 'port': 9200}]) # 9200 by Default
 
     # Here, you should implement:
@@ -18,7 +18,7 @@ def processTweet(tweet):
     # (iii) Index the data using Elastic Search         
 
     if tweet == "SSC_TERMINATE":
-        s
+        exit()
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
