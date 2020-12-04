@@ -64,17 +64,23 @@ class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         googleholder=googlemaps.Client(key ="AIzaSyCJdLk_x5tkFvAHNAeOB5-VGTP1MCEMiL0")
         location, tweet = getTweet(status)
+        geocode = None
         if location != None:
-            result = googleholder.geocode(location)
-            if result:
-                lat =result[0]['geometry']['location']
-                local_latlong=str(lat['lng']) + str(lat['lat'])
-            else:
-                local_latlong=""
-        else:
-            local_latlong=""
-        if (location != None and tweet != None):
-            tweetLocation = local_latlong + "::" + tweet+"\n"
+            res = googleholder.geocode(address = location)
+            if res:
+                geocode = res[0].get('geometry').get('location')
+                complete_location = googleholder.reverse_geocode(latlng = geocode, result_type = "political|country|administrative_area_level_1")
+                if complete_location:
+                    for comp in complete_location[0].get('address_components'):
+                        if comp.get('types')[0] == 'administrative_area_level_1':
+                            location = comp['long_name']
+                            break
+                        elif comp.get('types')[0] == 'country':
+                            location = comp.get('long_name')
+                            break
+        if (location != None and tweet != None and geocode != None):
+            print("LOCATION: ", location)
+            tweetLocation = location + "::" + str(geocode.get('lat')) + "::" + str(geocode.get('lng')) + "::" + tweet+"\n"
             print(status.text)
             conn.send(tweetLocation.encode('ascii', 'ignore'))
         return True
@@ -87,7 +93,7 @@ class MyStreamListener(tweepy.StreamListener):
             print(status_code)
 if __name__ == "__main__":
     
-    hashtag = '#Minecraft'
+    hashtag = '#Trump'
 
     # create sockets
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

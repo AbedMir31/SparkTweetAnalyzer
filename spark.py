@@ -20,9 +20,12 @@ def processTweet(tweet):
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
-        rawLocation = tweetData[0]
-        text = tweetData[1]
-        
+        full_location = tweetData[0]
+        lat = tweetData[1]
+        lng = tweetData[2]
+        rawLocation = [lat, lng]
+        text = tweetData[3]
+
         # (i) Apply Sentiment analysis in "text"
         blob = TextBlob(text)
         if blob.sentiment.polarity < 0:
@@ -34,25 +37,28 @@ def processTweet(tweet):
 
 	 # (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
         
-        print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
+        print("\n\n=========================\ntweet: ", text, "\nlocation: ", full_location, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
      # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
         with open("logger.json", "a") as data:
             pack_tweet = {
                 "text":text,
-                "location":rawLocation,
+                "location":full_location,
+                "geocode":rawLocation,
                 "sentiment":sentiment
             }
-            data.write(json.dumps(pack_tweet, indent=4, separators=(',', ':')))
+            data.write(json.dumps(pack_tweet))
+            data.write('\n')
             data.close()
 
         # Indexing
-        esDoc = {"text": text, "location": rawLocation, "sentiment": sentiment}
-        es.index(index = 'tw-sent', doc_type='default', body=esDoc)
-
-
-
-
+        esDoc = {
+                "text":text,
+                "location":full_location,
+                "geocode":rawLocation,
+                "sentiment":sentiment
+            }
+        es.index(index = 'tweet-data', body=esDoc)
 
 
 if __name__ == "__main__":
