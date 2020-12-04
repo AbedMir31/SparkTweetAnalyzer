@@ -5,6 +5,8 @@ import preprocessor as p
 import sys
 import googlemaps
 import pandas as pd 
+import time
+import threading
 
 
 access_token="1326362589002149888-L1HZIK8K5vYHRPfOktglTmhlSk5KsK"
@@ -79,9 +81,9 @@ class MyStreamListener(tweepy.StreamListener):
                             location = comp.get('long_name')
                             break
         if (location != None and tweet != None and geocode != None):
-            print("LOCATION: ", location)
+            #print("LOCATION: ", location)
             tweetLocation = location + "::" + str(geocode.get('lat')) + "::" + str(geocode.get('lng')) + "::" + tweet+"\n"
-            print(status.text)
+            #print(status.text)
             conn.send(tweetLocation.encode('ascii', 'ignore'))
         return True
 
@@ -91,9 +93,8 @@ class MyStreamListener(tweepy.StreamListener):
             return False
         else:
             print(status_code)
+
 if __name__ == "__main__":
-    
-    hashtag = '#Trump'
 
     # create sockets
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -101,5 +102,25 @@ if __name__ == "__main__":
     s.listen(1)
     conn, addr = s.accept()
 
-    myStream = tweepy.Stream(auth=auth, listener=MyStreamListener())
-    myStream.filter(track=[hashtag], languages=["en"], is_async=True)
+    nput = input("Enter tag you would like to analyze (no # required). Type 'quit' to exit: ")
+    if nput:
+        if nput == 'quit':
+            conn.send("SSC_TERMINATE".encode('ascii', 'ignore'))
+            s.close()
+            exit()
+        hashtag = "#" + nput
+    
+    while True:
+        try:
+            print("Fetching tweets containing '", hashtag, "'.....")
+            f = tweepy.Stream(auth=auth, listener=MyStreamListener())
+            f.filter(track=[hashtag], languages=["en"], is_async=True)
+            nput = input("Enter tag you would like to analyze (no # required). Type 'quit' to exit: ")
+            if nput:
+                if nput == 'quit':
+                    conn.send("SSC_TERMINATE".encode('ascii', 'ignore'))
+                    s.close()
+                    break
+                hashtag = "#" + nput
+        finally:
+            f.disconnect()

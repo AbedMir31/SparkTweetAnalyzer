@@ -17,6 +17,8 @@ def processTweet(tweet):
     # (ii) Get data corresponding to place where the tweet was generate (using geopy or googlemaps)
     # (iii) Index the data using Elastic Search         
 
+    if tweet == "SSC_TERMINATE":
+        s
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
