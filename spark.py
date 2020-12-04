@@ -9,10 +9,12 @@ from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
+
 ES_IND ="tweets"
 es =Elasticsearch([{'host':'localhost', 'port':9200}])
 
 def processTweet(tweet):
+
     # Here, you should implement:
     # (i) Sentiment analysis,
     # (ii) Get data corresponding to place where the tweet was generate (using geopy or googlemaps)
@@ -24,7 +26,7 @@ def processTweet(tweet):
         rawLocation = tweetData[0]
         rawLocation =tweetData.split()
         text = tweetData[1]
-
+        
         # (i) Apply Sentiment analysis in "text"
         blob = TextBlob(text)
         if blob.sentiment.polarity < 0:
@@ -36,9 +38,10 @@ def processTweet(tweet):
 
 	 # (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
 
+        
         print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
-     # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!)
+     # (iii) Post the index on ElasticSearch or log your data in some other way (you are always free!!) 
         with open("logger.json", "a") as data:
             pack_tweet = {
                 "text":text,
@@ -60,8 +63,6 @@ def processTweet(tweet):
                 body={"text":text,
                 "location":rawLocation,
                 "sentiment":sentiment})
-       
-    
 
 if __name__ == "__main__":
     # Pyspark
