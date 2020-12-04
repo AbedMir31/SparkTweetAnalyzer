@@ -51,11 +51,11 @@ def processTweet(tweet):
             data.write('\n')
             data.close()
 
-        # Indexing
+        # Indexing, changed for heat map implementation
         esDoc = {
                 "text":text,
                 "location":full_location,
-                "geocode":rawLocation,
+                "geocode":{rawLocation,{"type": "geo_point"}},
                 "sentiment":sentiment
             }
         es.index(index = 'tweet-data', body=esDoc)
