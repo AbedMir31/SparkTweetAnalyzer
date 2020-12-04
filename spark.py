@@ -9,18 +9,22 @@ from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
+
+ES_IND ="tweets"
+es =Elasticsearch([{'host':'localhost', 'port':9200}])
+
 def processTweet(tweet):
-    es = Elasticsearch([{'host': 'localhost', 'port': 9200}]) # 9200 by Default
 
     # Here, you should implement:
     # (i) Sentiment analysis,
     # (ii) Get data corresponding to place where the tweet was generate (using geopy or googlemaps)
-    # (iii) Index the data using Elastic Search         
-
+    # (iii) Index the data using Elastic Search
+    #es.indices.create(index=ES_IND,ignore=400)
     tweetData = tweet.split("::")
 
     if len(tweetData) > 1:
         rawLocation = tweetData[0]
+        rawLocation =tweetData.split()
         text = tweetData[1]
         
         # (i) Apply Sentiment analysis in "text"
@@ -33,6 +37,7 @@ def processTweet(tweet):
             sentiment = "Positive"
 
 	 # (ii) Get geolocaton (state, country, lat, lon, etc...) from rawLocation
+
         
         print("\n\n=========================\ntweet: ", text, "\nlocation: ", rawLocation, "\nSentiment: ", sentiment, "\n=========================\n\n")
 
@@ -45,15 +50,19 @@ def processTweet(tweet):
             }
             data.write(json.dumps(pack_tweet, indent=4, separators=(',', ':')))
             data.close()
-
-        # Indexing
-        esDoc = {"text": text, "location": rawLocation, "sentiment": sentiment}
-        es.index(index = 'tw-sent', doc_type='default', body=esDoc)
-
-
-
-
-
+            
+            #Here i try and success in starting elasticsearch that connects to Kibana
+            #Here we connect to the elasticsearch server
+            #with open("/home/mrcig/Dev/project/SparkTweetAnalyzer-main/logger.json") as json_file:
+                #js_doc =json.load(json_file)
+            #res= es.index()
+            #es.index(index ="sent", doc_type="example"
+                   # body={"user": })
+        es.index(index="sentiment",
+                doc_type="test-type", 
+                body={"text":text,
+                "location":rawLocation,
+                "sentiment":sentiment})
 
 if __name__ == "__main__":
     # Pyspark
