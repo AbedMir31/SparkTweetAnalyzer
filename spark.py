@@ -9,7 +9,7 @@ from elasticsearch import Elasticsearch
 
 TCP_IP = 'localhost'
 TCP_PORT = 9001
-def processTweet(ssc, tweet):
+def processTweet(tweet):
     es = Elasticsearch([{'host': 'localhost', 'port': 9200}]) # 9200 by Default
 
     # Here, you should implement:
@@ -23,9 +23,13 @@ def processTweet(ssc, tweet):
 
     if len(tweetData) > 1:
         full_location = tweetData[0]
-        lat = tweetData[1]
-        lng = tweetData[2]
-        rawLocation = [lat, lng]
+        '''
+        rawLocation = {
+            "lat":float(tweetData[1]),
+            "lon":float(tweetData[2])
+        }
+        '''
+        rawLocation = tweetData[1] + "," + tweetData[2]
         text = tweetData[3]
 
         # (i) Apply Sentiment analysis in "text"
@@ -60,7 +64,7 @@ def processTweet(ssc, tweet):
                 "geocode":rawLocation,
                 "sentiment":sentiment
             }
-        es.index(index = 'tweet-data', body=esDoc)
+        es.index(index='tw', body=esDoc)
 
 
 if __name__ == "__main__":
